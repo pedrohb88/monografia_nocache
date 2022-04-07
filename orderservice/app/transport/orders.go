@@ -12,29 +12,16 @@ import (
 
 type Orders struct {
 	service *service.Service
-	entity  *entity.Entity
 }
 
 func (o *Orders) GetByUserID(w http.ResponseWriter, r *http.Request) {
 
 	userID := util.ParamAsInt(r, "userID")
 
-	ordersModel, err := o.service.Orders.GetByUserID(userID)
+	orders, err := o.service.Orders.GetByUserID(userID)
 	if err != nil {
 		response.Err(w, http.StatusInternalServerError, err)
 		return
-	}
-
-	orders := make([]*entity.Order, len(ordersModel))
-	for i, order := range ordersModel {
-
-		o, err := o.entity.NewOrderByID(order.ID)
-		if err != nil {
-			response.Err(w, http.StatusInternalServerError, err)
-			return
-		}
-
-		orders[i] = o
 	}
 
 	response.JSON(w, orders)
@@ -43,7 +30,7 @@ func (o *Orders) GetByUserID(w http.ResponseWriter, r *http.Request) {
 func (o *Orders) GetByID(w http.ResponseWriter, r *http.Request) {
 	orderID := util.ParamAsInt(r, "orderID")
 
-	order, err := o.entity.NewOrderByID(orderID)
+	order, err := o.service.Orders.GetByID(orderID)
 	if errors.IsNotFound(err) {
 		response.Empty(w, http.StatusNotFound)
 		return
@@ -57,21 +44,20 @@ func (o *Orders) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Orders) Create(w http.ResponseWriter, r *http.Request) {
-
-	var order model.Order
-	err := util.DecodeJSON(r, &order)
+	var orderModel model.Order
+	err := util.DecodeJSON(r, &orderModel)
 	if err != nil {
 		response.Err(w, http.StatusBadRequest, err)
 		return
 	}
 
-	err = o.service.Orders.Create(&order)
+	err = o.service.Orders.Create(&orderModel)
 	if err != nil {
 		response.Err(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	response.JSON(w, o.entity.NewOrder(order))
+	response.JSON(w, entity.NewBasicOrder(orderModel))
 }
 
 func (o *Orders) AddItem(w http.ResponseWriter, r *http.Request) {
@@ -93,9 +79,9 @@ func (o *Orders) AddItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := o.entity.NewOrderByID(item.OrderID)
+	order, err := o.service.Orders.GetByID(orderID)
 	if err != nil {
-		response.Err(w, http.StatusInternalServerError, err)
+		response.Empty(w, http.StatusOK)
 		return
 	}
 
@@ -103,6 +89,7 @@ func (o *Orders) AddItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Orders) RemoveItem(w http.ResponseWriter, r *http.Request) {
+	orderID := util.ParamAsInt(r, "orderID")
 	itemID := util.ParamAsInt(r, "itemID")
 
 	err := o.service.Orders.RemoveItem(itemID)
@@ -114,6 +101,14 @@ func (o *Orders) RemoveItem(w http.ResponseWriter, r *http.Request) {
 		response.Err(w, http.StatusInternalServerError, err)
 		return
 	}
+
+	order, err := o.service.Orders.GetByID(orderID)
+	if err != nil {
+		response.Empty(w, http.StatusOK)
+		return
+	}
+
+	response.JSON(w, order)
 }
 
 func (o *Orders) Pay(w http.ResponseWriter, r *http.Request) {

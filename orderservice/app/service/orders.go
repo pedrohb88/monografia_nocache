@@ -1,11 +1,13 @@
 package service
 
 import (
+	"database/sql"
 	"monografia/errors"
 	"monografia/model"
 	"monografia/store/items"
 	"monografia/store/orders"
 	"monografia/store/products"
+	"monografia/transport/entity"
 )
 
 type ordersService struct {
@@ -14,24 +16,30 @@ type ordersService struct {
 	productsStore products.Products
 }
 
-func (o *ordersService) GetByUserID(userID int) ([]*model.Order, error) {
-	return o.ordersStore.GetByUserID(userID)
+func (o *ordersService) GetByUserID(userID int) ([]*entity.Order, error) {
+
+	ordersModels, err := o.ordersStore.GetByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return entity.NewOrders(ordersModels), nil
 }
 
-func (o *ordersService) GetByID(orderID int) (*model.Order, error) {
-	return o.ordersStore.GetByID(orderID)
+func (o *ordersService) GetByID(orderID int) (*entity.Order, error) {
+	orderModels, err := o.ordersStore.GetByID(orderID)
+	if len(orderModels) == 0 {
+		return nil, sql.ErrNoRows
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return entity.NewOrders(orderModels)[0], nil
 }
 
 func (o *ordersService) Create(order *model.Order) error {
 	return o.ordersStore.Create(order)
-}
-
-func (o *ordersService) GetItems(orderID int) ([]*model.Item, error) {
-	return o.itemsStore.GetByOrderID(orderID)
-}
-
-func (o *ordersService) GetItemByID(itemID int) (*model.Item, error) {
-	return o.itemsStore.GetByID(itemID)
 }
 
 func (o *ordersService) AddItem(item *model.Item) error {

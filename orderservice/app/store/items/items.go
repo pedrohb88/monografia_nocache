@@ -8,10 +8,6 @@ import (
 )
 
 var (
-	queryByID = `SELECT * FROM items WHERE id = ?`
-
-	queryItemsByOrderID = `SELECT * FROM items WHERE order_id = ?`
-
 	execInsertItem = `
 	INSERT INTO items(order_id, product_id, quantity, price) 
 	VALUES(?, ?, ?, ?)
@@ -21,8 +17,6 @@ var (
 )
 
 type Items interface {
-	GetByID(itemID int) (*model.Item, error)
-	GetByOrderID(orderID int) ([]*model.Item, error)
 	Create(item *model.Item) error
 	Delete(itemID int) error
 }
@@ -33,19 +27,6 @@ type items struct {
 
 func New(db *gorp.DbMap) Items {
 	return &items{db: db}
-}
-
-func (i *items) GetByID(itemID int) (*model.Item, error) {
-	var item model.Item
-	err := i.db.SelectOne(&item, queryByID, itemID)
-	return &item, err
-}
-
-func (i *items) GetByOrderID(orderID int) ([]*model.Item, error) {
-	var items []*model.Item
-
-	_, err := i.db.Select(&items, queryItemsByOrderID, orderID)
-	return items, err
 }
 
 func (i *items) Create(item *model.Item) error {

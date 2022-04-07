@@ -8,7 +8,7 @@ type Product struct {
 	Price float64 `json:"price"`
 }
 
-func (e *Entity) NewProduct(p *model.Product) *Product {
+func NewBasicProduct(p *model.Product) *Product {
 	return &Product{
 		ID:    p.ID,
 		Name:  p.Name,
@@ -16,12 +16,10 @@ func (e *Entity) NewProduct(p *model.Product) *Product {
 	}
 }
 
-func (e *Entity) NewProductByID(productID int) (*Product, error) {
-
-	product, err := e.service.Products.GetByID(productID)
-	if err != nil {
-		return nil, err
+func NewProducts(models []*model.Product) []*Product {
+	products := make([]*Product, len(models))
+	for i, m := range models {
+		products[i] = NewBasicProduct(m)
 	}
-
-	return e.NewProduct(product), nil
+	return products
 }

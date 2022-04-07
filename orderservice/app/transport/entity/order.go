@@ -3,47 +3,55 @@ package entity
 import "monografia/model"
 
 type Order struct {
-	ID            int         `json:"id"`
-	UserID        int         `json:"user_id"`
-	ItemsQuantity int         `json:"items_quantity"`
-	Price         float64     `json:"price"`
-	Items         []*Item     `json:"items"`
-	Payment       interface{} `json:"payment"`
+	ID            int     `json:"id"`
+	UserID        int     `json:"user_id"`
+	ItemsQuantity int     `json:"items_quantity"`
+	Price         float64 `json:"price"`
+	Items         []*Item `json:"items"`
 }
 
-func (e *Entity) NewOrder(m model.Order) Order {
-	return Order{
-		ID:            m.ID,
-		UserID:        m.UserID,
-		ItemsQuantity: m.ItemsQuantity,
-		Price:         m.Price,
+func NewBasicOrder(model model.Order) *Order {
+	return &Order{
+		ID:            model.ID,
+		UserID:        model.UserID,
+		ItemsQuantity: model.ItemsQuantity,
+		Price:         model.Price,
 	}
 }
 
-func (e *Entity) NewOrderByID(orderID int) (*Order, error) {
+func NewOrders(models []model.Order) []*Order {
 
-	order, err := e.service.Orders.GetByID(orderID)
-	if err != nil {
-		return nil, err
-	}
+	var orders []*Order
 
-	itemsModel, err := e.service.Orders.GetItems(orderID)
-	if err != nil {
-		return nil, err
-	}
+	var currentOrder *Order
+	for _, model := range models {
 
-	items := make([]*Item, len(itemsModel))
-	for i, item := range itemsModel {
-		it, err := e.NewItemByID(item.ID)
-		if err != nil {
-			return nil, err
+		if currentOrder == nil || model.ID != currentOrder.ID {
+			currentOrder = NewBasicOrder(model)
+			orders = append(orders, currentOrder)
 		}
-		items[i] = it
+
+		if model.ItemID == nil {
+			continue
+		}
+
+		item := &Item{
+			ID:       *model.ItemID,
+			OrderID:  model.ID,
+			Quantity: *model.ItemQuantity,
+			Price:    *model.ItemPrice,
+		}
+
+		product := &Product{
+			ID:    *model.ProductID,
+			Name:  *model.ProductName,
+			Price: *model.ProductPrice,
+		}
+
+		item.Product = product
+
+		currentOrder.Items = append(currentOrder.Items, item)
 	}
 
-	// TODO : Buscar PAYMENT
-	o := e.NewOrder(*order)
-	o.Items = items
-
-	return &o, nil
+	return orders
 }

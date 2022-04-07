@@ -12,7 +12,6 @@ import (
 	"monografia/store/orders"
 	"monografia/store/products"
 	"monografia/transport"
-	"monografia/transport/entity"
 )
 
 func main() {
@@ -32,8 +31,7 @@ func main() {
 	service := srv.New(ordersStore, productsStore, itemsStore)
 
 	// Transport
-	entity := entity.New(service)
-	router := transport.NewRouter(service, entity)
+	router := transport.NewRouter(service)
 
 	log.Default().Println("Running server on port :3333")
 	http.ListenAndServe(":3333", router)
