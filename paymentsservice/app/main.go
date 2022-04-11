@@ -1,48 +1,36 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
+	"log"
+	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
+
+	"monografia/database"
+	srv "monografia/service"
+	"monografia/store/invoices"
+	"monografia/store/payments"
+	"monografia/transport"
 )
 
 func main() {
-	db, err := sql.Open("mysql", "myuser:mypass@tcp(db:3306)/test_db")
 
-	// if there is an error opening the connection, handle it
+	// Database
+	db, err := database.New()
 	if err != nil {
-		fmt.Println("error opening connection: ", err)
-		return
+		log.Fatal(err)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		fmt.Println("error pinging connection: ", err)
-		return
-	}
+	// Stores
+	paymentsStore := payments.New(&db)
+	invoicesStore := invoices.New(&db)
 
-	rows, err := db.Query("SELECT id, amount FROM payments")
-	if err != nil {
-		panic(err)
-	}
+	// Services
+	service := srv.New(paymentsStore, invoicesStore)
 
-	defer rows.Close()
+	// Transport
+	router := transport.NewRouter(service)
 
-	for rows.Next() {
-
-		var id int
-		var amount float64
-
-		err := rows.Scan(&id, &amount)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Println("result: ", id, amount)
-	}
-
-	// defer the close till after the main function has finished
-	// executing
-	defer db.Close()
+	log.Default().Println("Running server on port :3334")
+	http.ListenAndServe(":3334", router)
 }

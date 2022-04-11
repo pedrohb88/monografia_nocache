@@ -21,6 +21,3 @@ CREATE TABLE IF NOT EXISTS items (
     FOREIGN KEY (order_id) REFERENCES orders(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
 );
-
-CREATE INDEX user_id ON orders (user_id);
-CREATE INDEX payment_id ON orders (payment_id);

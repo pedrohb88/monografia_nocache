@@ -17,17 +17,20 @@ services:
       retries: 10
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "rootpass"
-      MYSQL_DATABASE: "test_db"
+      MYSQL_DATABASE: "database"
       MYSQL_USER: "myuser"
       MYSQL_PASSWORD: "mypass"
     volumes:
-      - mysql_data_test_2:/var/lib/mysql
+      - mysql_payments_database:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
   app:
     build:
       context: ./app
     ports:
-      - "3000:3000"
+      - "3334:3334"
+    environment:
+      - DBCONN=myuser:mypass@tcp(db:3307)/database
+      - ENV=production
     depends_on:
       db: 
         condition: service_healthy
@@ -35,4 +38,4 @@ services:
 networks:
   default:
 volumes:
-  mysql_data_test_2:
+  mysql_payments_database:

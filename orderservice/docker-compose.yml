@@ -27,7 +27,7 @@ services:
     build:
       context: ./app
     ports:
-      - "3000:3000"
+      - "3333:3333"
     environment:
       - DBCONN=myuser:mypass@tcp(db:3306)/database
       - ENV=production
