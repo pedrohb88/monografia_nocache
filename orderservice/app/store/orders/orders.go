@@ -9,17 +9,10 @@ import (
 
 var (
 	queryOrdersBase = `
-	SELECT 
-		o.id AS ID, 
-		o.user_id AS UserID, 
-		o.items_quantity AS ItemsQuantity, 
-		o.price AS Price,
-		i.id AS ItemID,
-		i.quantity AS ItemQuantity,
-		i.price AS ItemPrice,
-		p.id AS ProductID,
-		p.name AS ProductName,
-		p.price AS ProductPrice
+	SELECT o.id AS ID, o.user_id AS UserID, o.items_quantity AS ItemsQuantity, 
+		o.price AS Price, o.payment_id AS PaymentID, 
+		i.id AS ItemID, i.quantity AS ItemQuantity, i.price AS ItemPrice,
+		p.id AS ProductID, p.name AS ProductName, p.price AS ProductPrice
 	FROM orders o
 	INNER JOIN items i
 		ON i.order_id = o.id
@@ -36,12 +29,15 @@ var (
 	INSERT INTO orders(user_id, items_quantity, price)
 	VALUES (?, ?, ?)
 	`
+
+	execUpdatePayment = `UPDATE orders SET payment_id = ? WHERE id = ?`
 )
 
 type Orders interface {
 	GetByUserID(userID int) ([]model.Order, error)
 	GetByID(orderID int) ([]model.Order, error)
 	Create(order *model.Order) error
+	UpdatePaymentID(orderID, paymentID int) error
 }
 
 type orders struct {
@@ -80,4 +76,12 @@ func (o *orders) Create(order *model.Order) error {
 	lastID, _ := res.LastInsertId()
 	order.ID = int(lastID)
 	return nil
+}
+
+func (o *orders) UpdatePaymentID(orderID, paymentID int) error {
+	_, err := o.db.Exec(execUpdatePayment,
+		paymentID,
+		orderID,
+	)
+	return err
 }

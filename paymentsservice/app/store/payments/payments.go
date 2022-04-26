@@ -16,7 +16,7 @@ var (
 		i.code AS InvoiceCode, 
 		i.link AS InvoiceLink
 	FROM payments p
-	INNER JOIN invoices i
+	LEFT JOIN invoices i
 		ON p.invoice_id = i.id
 	%s
 	`
@@ -44,7 +44,6 @@ func New(db *gorp.DbMap) Payments {
 
 func (o *payments) GetByID(paymentID int) ([]model.Payment, error) {
 	var payments []model.Payment
-
 	_, err := o.db.Select(&payments, byID, paymentID)
 	return payments, err
 }

@@ -5,6 +5,7 @@ type Order struct {
 	UserID        int     `json:"user_id"`
 	ItemsQuantity int     `json:"items_quantity"`
 	Price         float64 `json:"price"`
+	PaymentID     *int    `json:"payment_id"`
 	ItemID        *int
 	ItemQuantity  *int
 	ItemPrice     *float64

@@ -15,11 +15,11 @@ type paymentsService struct {
 
 func (o *paymentsService) GetByID(paymentID int) (*entity.Payment, error) {
 	paymentModels, err := o.paymentsStore.GetByID(paymentID)
-	if len(paymentModels) == 0 {
-		return nil, sql.ErrNoRows
-	}
 	if err != nil {
 		return nil, err
+	}
+	if len(paymentModels) == 0 {
+		return nil, sql.ErrNoRows
 	}
 
 	return entity.NewPayments(paymentModels)[0], nil

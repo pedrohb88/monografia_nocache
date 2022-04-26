@@ -112,6 +112,25 @@ func (o *Orders) RemoveItem(w http.ResponseWriter, r *http.Request) {
 }
 
 func (o *Orders) Pay(w http.ResponseWriter, r *http.Request) {
-	// Esse cara vai chamar o outro microsservice, recebendo o ID do payment como resposta pra atualizar a order
-	return
+	orderID := util.ParamAsInt(r, "orderID")
+
+	order, err := o.service.Orders.GetByID(orderID)
+	if err != nil {
+		response.Err(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	err = o.service.Orders.Pay(order.ID, order.Price)
+	if err != nil {
+		response.Err(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	order, err = o.service.Orders.GetByID(orderID)
+	if err != nil {
+		response.Err(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	response.JSON(w, order)
 }

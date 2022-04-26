@@ -24,3 +24,12 @@ CREATE TABLE IF NOT EXISTS items (
 
 CREATE INDEX user_id ON orders (user_id);
 CREATE INDEX payment_id ON orders (payment_id);
+
+CREATE TABLE IF NOT EXISTS benchmark (
+    test INTEGER, 
+    resource ENUM('net', 'cpu', 'time'),
+    x FLOAT, 
+    y FLOAT
+);
+
+CREATE INDEX resource ON benchmark (resource);

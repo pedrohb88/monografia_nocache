@@ -29,7 +29,7 @@ services:
     ports:
       - "3334:3334"
     environment:
-      - DBCONN=myuser:mypass@tcp(db:3307)/database
+      - DBCONN=myuser:mypass@tcp(db:3306)/database
       - ENV=production
     depends_on:
       db: 

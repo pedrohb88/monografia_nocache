@@ -3,11 +3,12 @@ package entity
 import "monografia/model"
 
 type Order struct {
-	ID            int     `json:"id"`
-	UserID        int     `json:"user_id"`
-	ItemsQuantity int     `json:"items_quantity"`
-	Price         float64 `json:"price"`
-	Items         []*Item `json:"items"`
+	ID            int      `json:"id"`
+	UserID        int      `json:"user_id"`
+	ItemsQuantity int      `json:"items_quantity"`
+	Price         float64  `json:"price"`
+	Items         []*Item  `json:"items"`
+	Payment       *Payment `json:"payment"`
 }
 
 func NewBasicOrder(model model.Order) *Order {

@@ -57,6 +57,6 @@ func (p *invoices) Create(invoice *model.Invoice) error {
 	}
 
 	lastID, _ := res.LastInsertId()
-	invoice.ID = int(lastID)
+	invoice.ID = &[]int{int(lastID)}[0]
 	return nil
 }

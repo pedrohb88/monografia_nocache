@@ -3,8 +3,10 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 
 	"monografia/database"
 	srv "monografia/service"
@@ -14,6 +16,12 @@ import (
 )
 
 func main() {
+	if os.Getenv("ENV") != "production" {
+		err := godotenv.Load()
+		if err != nil {
+			log.Fatalf("error loading config; %s", err.Error())
+		}
+	}
 
 	// Database
 	db, err := database.New()
