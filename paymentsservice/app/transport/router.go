@@ -9,6 +9,8 @@ import (
 func NewRouter(srv service.Service) *chi.Mux {
 	r := chi.NewRouter()
 
+	r.Use(Benchmark)
+
 	payments := &Payments{service: &srv}
 	invoices := &Invoices{service: &srv}
 
