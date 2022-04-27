@@ -37,23 +37,24 @@ func (o *ordersService) GetByID(orderID int) (*entity.Order, error) {
 		return nil, err
 	}
 
-	var payment *model.Payment
+	e := entity.NewOrders(orderModels)[0]
+
+	var payment *model.Payment 
 	if orderModels[0].PaymentID != nil {
 		payment, err = o.paymentsStore.GetByID(*orderModels[0].PaymentID)
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	e := entity.NewOrders(orderModels)[0]
-	e.Payment = &entity.Payment{
-		ID:     payment.ID,
-		Amount: payment.Amount,
-		Invoice: &entity.Invoice{
-			ID:   payment.Invoice.ID,
-			Code: payment.Invoice.Code,
-			Link: payment.Invoice.Link,
-		},
+		e.Payment = &entity.Payment{
+			ID:     payment.ID,
+			Amount: payment.Amount,
+			Invoice: &entity.Invoice{
+				ID:   payment.Invoice.ID,
+				Code: payment.Invoice.Code,
+				Link: payment.Invoice.Link,
+			},
+		}
 	}
 
 	return e, nil

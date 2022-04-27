@@ -41,6 +41,7 @@ func (p *Products) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Products) Create(w http.ResponseWriter, r *http.Request) {
+
 	var productModel model.Product
 	err := util.DecodeJSON(r, &productModel)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"monografia/database"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/mackerelio/go-osstat/cpu"
@@ -19,8 +20,11 @@ func Benchmark(next http.Handler) http.Handler {
 		log.Fatal(err)
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	var mutex sync.Mutex
+	var cpuValues []float64
+	var netValues []uint64
 
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var cpuUsage float64
 		var netUsage uint64
 
@@ -43,6 +47,16 @@ func Benchmark(next http.Handler) http.Handler {
 		cpuSystem := float64(after.System-before.System) / total * 100
 
 		cpuUsage = cpuUser + cpuSystem
+
+		mutex.Lock()
+		cpuValues = append(cpuValues, cpuUsage)
+		var cpuMed float64
+		var sum float64
+		for _, v := range cpuValues {
+			sum += v
+		}
+		cpuMed = sum / float64(len(cpuValues))
+		mutex.Unlock()
 
 		var startBytes, endBytes uint64
 
@@ -71,13 +85,22 @@ func Benchmark(next http.Handler) http.Handler {
 		}
 
 		netUsage = endBytes - startBytes
+		mutex.Lock()
+		netValues = append(netValues, netUsage)
+		var netMed float64
+		var sumNet uint64
+		for _, v := range netValues {
+			sumNet += v
+		}
+		netMed = float64(sumNet) / float64(len(netValues))
+		mutex.Unlock()
 
 		_, err = db.Exec(`
 			INSERT INTO benchmark(test, resource, x, y)
 			VALUES (?, ?, ?, ?), (?, ?, ?, ?)
 		`,
-			testID, "cpu", reqID, cpuUsage,
-			testID, "net", reqID, float64(netUsage),
+			testID, "cpu", reqID, cpuMed,
+			testID, "net", reqID, netMed/128.0,
 		)
 		if err != nil {
 			log.Fatal(err)
