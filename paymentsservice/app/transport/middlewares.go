@@ -25,6 +25,12 @@ func Benchmark(next http.Handler) http.Handler {
 	var netValues []uint64
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		if os.Getenv("ENV") != "production" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		var cpuUsage float64
 		var netUsage uint64
 

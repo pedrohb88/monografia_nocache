@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"monografia/database"
@@ -25,11 +26,19 @@ func Benchmark(next http.Handler) http.Handler {
 	var netValues []uint64
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var cpuUsage float64
-		var netUsage uint64
 
 		testID := r.Header.Get("x-test")
 		reqID := r.Header.Get("x-req")
+		r = r.WithContext(context.WithValue(r.Context(), "x-test", testID))
+		r = r.WithContext(context.WithValue(r.Context(), "x-req", reqID))
+
+		if os.Getenv("ENV") != "production" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		var cpuUsage float64
+		var netUsage uint64
 
 		before, err := cpu.Get()
 		if err != nil {

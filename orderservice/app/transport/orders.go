@@ -18,7 +18,7 @@ func (o *Orders) GetByUserID(w http.ResponseWriter, r *http.Request) {
 
 	userID := util.ParamAsInt(r, "userID")
 
-	orders, err := o.service.Orders.GetByUserID(userID)
+	orders, err := o.service.Orders.GetByUserID(r.Context(), userID)
 	if err != nil {
 		response.Err(w, http.StatusInternalServerError, err)
 		return
@@ -30,7 +30,7 @@ func (o *Orders) GetByUserID(w http.ResponseWriter, r *http.Request) {
 func (o *Orders) GetByID(w http.ResponseWriter, r *http.Request) {
 	orderID := util.ParamAsInt(r, "orderID")
 
-	order, err := o.service.Orders.GetByID(orderID)
+	order, err := o.service.Orders.GetByID(r.Context(), orderID)
 	if errors.IsNotFound(err) {
 		response.Empty(w, http.StatusNotFound)
 		return
@@ -79,7 +79,7 @@ func (o *Orders) AddItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := o.service.Orders.GetByID(orderID)
+	order, err := o.service.Orders.GetByID(r.Context(), orderID)
 	if err != nil {
 		response.Empty(w, http.StatusOK)
 		return
@@ -102,7 +102,7 @@ func (o *Orders) RemoveItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	order, err := o.service.Orders.GetByID(orderID)
+	order, err := o.service.Orders.GetByID(r.Context(), orderID)
 	if err != nil {
 		response.Empty(w, http.StatusOK)
 		return
@@ -114,19 +114,19 @@ func (o *Orders) RemoveItem(w http.ResponseWriter, r *http.Request) {
 func (o *Orders) Pay(w http.ResponseWriter, r *http.Request) {
 	orderID := util.ParamAsInt(r, "orderID")
 
-	order, err := o.service.Orders.GetByID(orderID)
+	order, err := o.service.Orders.GetByID(r.Context(), orderID)
 	if err != nil {
 		response.Err(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = o.service.Orders.Pay(order.ID, order.Price)
+	err = o.service.Orders.Pay(r.Context(), order.ID, order.Price)
 	if err != nil {
 		response.Err(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	order, err = o.service.Orders.GetByID(orderID)
+	order, err = o.service.Orders.GetByID(r.Context(), orderID)
 	if err != nil {
 		response.Err(w, http.StatusInternalServerError, err)
 		return

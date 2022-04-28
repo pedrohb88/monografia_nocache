@@ -2,6 +2,7 @@ package payments
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"monografia/model"
@@ -10,8 +11,8 @@ import (
 )
 
 type Payments interface {
-	Create(amount float64) (int, error)
-	GetByID(id int) (*model.Payment, error)
+	Create(ctx context.Context, amount float64) (int, error)
+	GetByID(ctx context.Context, id int) (*model.Payment, error)
 }
 
 type payments struct {
@@ -24,7 +25,12 @@ func New() Payments {
 	}
 }
 
-func (p *payments) Create(amount float64) (int, error) {
+func (p *payments) Create(ctx context.Context, amount float64) (int, error) {
+
+	testID, reqID, err := getHeaders(ctx)
+	if err != nil {
+		return 0, err
+	}
 
 	data := model.Payment{
 		Amount: amount,
@@ -35,9 +41,18 @@ func (p *payments) Create(amount float64) (int, error) {
 		return 0, err
 	}
 
-	resp, err := http.Post(p.url+"/payments", "application/json", bytes.NewBuffer(jsonData))
+	req, err := http.NewRequestWithContext(ctx, "POST", p.url+"/payments", bytes.NewBuffer(jsonData))
 	if err != nil {
 		return 0, nil
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("x-test", testID)
+	req.Header.Add("x-req", reqID)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return 0, err
 	}
 	defer resp.Body.Close()
 
@@ -46,10 +61,22 @@ func (p *payments) Create(amount float64) (int, error) {
 	return payment.ID, err
 }
 
-func (p *payments) GetByID(id int) (*model.Payment, error) {
+func (p *payments) GetByID(ctx context.Context, id int) (*model.Payment, error) {
+	testID, reqID, err := getHeaders(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	url := fmt.Sprintf("%s/payments/%d", p.url, id)
-	resp, err := http.Get(url)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("x-test", testID)
+	req.Header.Add("x-req", reqID)
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -58,4 +85,22 @@ func (p *payments) GetByID(id int) (*model.Payment, error) {
 	var payment model.Payment
 	err = json.NewDecoder(resp.Body).Decode(&payment)
 	return &payment, err
+}
+
+func getHeaders(ctx context.Context) (string, string, error) {
+
+	if os.Getenv("ENV") != "production" {
+		return "", "", nil
+	}
+
+	testID := ctx.Value("x-test").(string)
+	if testID == "" {
+		return "", "", fmt.Errorf("missing x-test header")
+	}
+
+	reqID := ctx.Value("x-req").(string)
+	if reqID == "" {
+		return "", "", fmt.Errorf("missing x-req header")
+	}
+	return testID, reqID, nil
 }

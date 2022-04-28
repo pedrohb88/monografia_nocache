@@ -1,6 +1,9 @@
 package entity
 
-import "monografia/model"
+import (
+	"context"
+	"monografia/model"
+)
 
 type Order struct {
 	ID            int      `json:"id"`
@@ -20,7 +23,7 @@ func NewBasicOrder(model model.Order) *Order {
 	}
 }
 
-func NewOrders(models []model.Order) []*Order {
+func NewOrders(ctx context.Context, models []model.Order) []*Order {
 
 	var orders []*Order
 
